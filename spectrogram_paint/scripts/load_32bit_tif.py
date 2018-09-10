@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import pyaudio
 import time
 import sys
@@ -54,42 +55,63 @@ second_pass = False
 
 do_bandpass = True
 lowcut = 20
-highcut = 10e3
+highcut = 5e3
 
+mag_stamp = None
+phase_stamp = None
 mag = None
 phase = None
 old_mag = None
 old_phase = None
 
 while True:
-    time.sleep(0.3)
+    time.sleep(0.1)
 
-    start = time.time()
-    mag = np.flipud(io.imread(mag_file))
+    try:
+        new_mag_stamp = os.stat(mag_file).st_mtime
+        new_phase_stamp = os.stat(phase_file).st_mtime
+    except OSError as ex:
+        print(ex)
+        continue
+    if new_mag_stamp == mag_stamp and new_phase_stamp == phase_stamp:
+        continue
+    mag_stamp = new_mag_stamp
+    phase_stamp = new_phase_stamp
 
-    if len(mag.shape) > 2:
-        print 'warning mag image has multiple layers', mag.shape[2]
-        mag = mag[:,:,0]
+    try:
+        start = time.time()
+        mag = np.flipud(io.imread(mag_file))
 
-    phase = np.flipud(io.imread(phase_file))
-    if len(phase.shape) > 2:
-        print 'warning phase image has multiple layers', phase.shape[2]
-        phase = phase[:,:,0]
-    end = time.time()
-    print end - start
+        if len(mag.shape) > 2:
+            print 'warning mag image has multiple layers', mag.shape[2]
+            # TODO(lucasw) maybe should sum the layers together?
+            mag = mag[:,:,0]
+
+        phase = np.flipud(io.imread(phase_file))
+        if len(phase.shape) > 2:
+            print 'warning phase image has multiple layers', phase.shape[2]
+            phase = phase[:,:,0]
+        end = time.time()
+        print end - start
+    except ValueError as ex:
+        print(ex)
+        continue
 
     if phase.shape != mag.shape:
         print phase.shape, '!=', mag.shape
         continue
 
-    update = old_phase is None or old_mag is None
-    if not update:
-        update = mag.shape != old_mag.shape
-    if not update:
-        update = not np.array_equal(phase, old_phase) or not np.array_equal(mag, old_mag)
-    if not update:
-        continue
-    print 'updating'
+    # don't need to check for differences, trust that if the modified timestamp
+    # is different then do the update
+    if False:
+        update = old_phase is None or old_mag is None
+        if not update:
+            update = mag.shape != old_mag.shape
+        if not update:
+            update = not np.array_equal(phase, old_phase) or not np.array_equal(mag, old_mag)
+        if not update:
+            continue
+    print 'updating', mag_stamp, phase_stamp
     print 'mag', mag_file, mag.shape, np.min(mag), np.max(mag)
     print 'phase', phase_file, phase.shape, np.min(phase), np.max(phase)
     old_mag = mag
@@ -125,7 +147,9 @@ while True:
         t = to
         x = xo
 
-    x = x / np.max(np.abs(x))
+    x_max = np.max(np.abs(x))
+    if x_max != 0.0:
+        x = x / x_max
     wavfile.write("test.wav", fs, x)
 
 if False:
@@ -136,9 +160,8 @@ if False:
     freq = np.fft.fftfreq(t.shape[-1], 1.0 / fs)
     freq = freq[:half_ind]
 
-
 if False:
-    fig, axes = plt.subplots(3, 1, num=1) # sharedy=True) # figure(num=0)
+    fig, axes = plt.subplots(3, 1, num=1)  # sharedy=True) # figure(num=0)
     # print axes.shape
     axes[0].pcolormesh(t2, f2, logzmag, vmin=0, vmax=2.0)
     axes[1].pcolormesh(t2, f2, zangle, vmin=0, vmax=2.0)
@@ -149,7 +172,6 @@ if False:
     # freq, np.angle(sp))
     plt.xlabel('frequency')
     plt.ylabel('magnitude')
-
 
 sind = 40000
 find = sind + 1000
