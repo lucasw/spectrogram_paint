@@ -56,6 +56,7 @@ second_pass = False
 do_bandpass = True
 lowcut = 20
 highcut = 5e3
+order = 3
 
 mag_stamp = None
 phase_stamp = None
@@ -124,7 +125,8 @@ while True:
 
     # filter out the DC and the higher frequencies
     if do_bandpass:
-        xo = butter_bandpass_filter(x_unfiltered, lowcut=lowcut, highcut=highcut, fs=fs, order=3)
+        xo = butter_bandpass_filter(x_unfiltered, lowcut=lowcut, highcut=highcut,
+                                    fs=fs, order=order)
     else:
         xo = x_unfiltered
 
