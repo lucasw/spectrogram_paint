@@ -12,27 +12,26 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
-roslint_cpp()
-
-find_package(spectrogram_paint REQUIRED)
+# roslint_cpp()
 
 # generate_dynamic_reconfigure_options(
 #   cfg/Delay.cfg
 # )
 
-# add_message_files(
-#   FILES
-# )
+add_message_files(
+  FILES
+  Audio.msg
+)
 
 # add_service_files(
 #   FILES
 # )
 
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-#   geometry_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+#  geometry_msgs
+)
 
 catkin_package(
   # INCLUDE_DIRS include
@@ -55,11 +54,11 @@ if(catkin_EXPORTED_LIBRARIES)
   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_LIBRARIES})
 endif()
 
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# install(TARGETS ${PROJECT_NAME}
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 # install(FILES
 #   nodelet_${PROJECT_NAME}.xml

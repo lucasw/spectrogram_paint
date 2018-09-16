@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="pub_changed_image" pkg="spectrogram_paint_ros"
+      type="pub_changed_image.py"
+      output="screen" >
+    <param name="image" value="$(find spectrogram_paint_ros)/data/mag.tif" />
+    <remap from="image" to="magnitude" />
+  </node>
+
+  <node name="spectrogram_image_to_audio" pkg="spectrogram_paint_ros"
+      type="spectrogram_image_to_audio.py"
+      output="screen" >
+    <param name="sample_rate" value="44100" />
+  </node>
+
+  <node name="view_audio" pkg="spectrogram_paint_ros"
+      type="view_audio.py"
+      output="screen" >
+  </node>
+
+</launch>
