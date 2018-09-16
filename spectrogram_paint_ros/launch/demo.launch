@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="image" default="$(find spectrogram_paint_ros)/data/mag.tif" />
 
   <node name="pub_changed_image" pkg="spectrogram_paint_ros"
       type="pub_changed_image.py"
       output="screen" >
-    <param name="image" value="$(find spectrogram_paint_ros)/data/mag.tif" />
+    <param name="image" value="$(arg image)" />
     <remap from="image" to="magnitude" />
   </node>
 
