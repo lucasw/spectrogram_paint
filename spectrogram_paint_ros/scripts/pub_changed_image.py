@@ -22,6 +22,9 @@ class PubChangedImage:
         filename = rospy.get_param("~image","image.tif")
         rospy.loginfo(filename)
 
+        # temp
+        rospy.sleep(2.0)
+
         self.bridge = CvBridge()
         old_stamp = None
         im = None
@@ -35,7 +38,7 @@ class PubChangedImage:
                 stamp = os.stat(filename).st_mtime
                 if stamp == old_stamp:
                     rospy.sleep(0.1)
-                #     continue
+                    continue
                 old_stamp = stamp
                 im = io.imread(filename)
                 # cv bridge can actually handle 2 channels, but imshow can't

@@ -27,6 +27,7 @@ class SpectrogramImageToAudio:
         self.do_bandpass = rospy.get_param("~do_bandpass", True)
         # TODO(lucasw) notch out 2.0-2.5 KHz?
 
+        self.is_dirty = True
         self.bridge = CvBridge()
 
         self.second_pass = False
@@ -44,9 +45,11 @@ class SpectrogramImageToAudio:
 
     def mag_callback(self, msg):
         self.mag_msg = msg
+        self.is_dirty = True
 
     def phase_callback(self, phase):
         self.phase_msg = msg
+        self.is_dirty = True
 
     def butter_bandpass(self, lowcut, highcut, fs, order=5):
         nyq = 0.5 * fs
@@ -63,6 +66,9 @@ class SpectrogramImageToAudio:
     def update(self, event=None):
         if self.mag_msg is None:
             return
+        if not self.is_dirty:
+            return
+        self.is_dirty = False
 
         # want to have lower frequencies on the bottom of the image which
         mag = np.flipud(self.bridge.imgmsg_to_cv2(self.mag_msg))
@@ -128,4 +134,4 @@ class SpectrogramImageToAudio:
 if __name__ == '__main__':
     rospy.init_node('spectrogram_image_to_audio')
     spectrogram_image_to_audio = SpectrogramImageToAudio()
-    rospy.sleep()
+    rospy.spin()

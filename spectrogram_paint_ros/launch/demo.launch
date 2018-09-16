@@ -19,4 +19,9 @@
       output="screen" >
   </node>
 
+  <node name="loop_audio" pkg="spectrogram_paint_ros"
+      type="loop_audio.py"
+      output="screen" >
+  </node>
+
 </launch>
