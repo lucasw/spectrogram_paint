@@ -22,7 +22,7 @@ class SpectrogramImageToAudio:
         self.fs = rospy.get_param("~sample_rate", 44100)
         self.onesided = rospy.get_param("~onesided", True)
         self.lowcut = rospy.get_param("~lowcut", 20)
-        self.highcut = rospy.get_param("~highcut", 20000)
+        self.highcut = rospy.get_param("~highcut", 18000)
         self.bandpass_order = rospy.get_param("~bandpass_order", 3)
         self.do_bandpass = rospy.get_param("~do_bandpass", True)
         # TODO(lucasw) notch out 2.0-2.5 KHz?
@@ -38,6 +38,8 @@ class SpectrogramImageToAudio:
         self.phase_sub = rospy.Subscriber("phase", Image, self.phase_callback, queue_size=5)
 
         self.pub = rospy.Publisher("audio", Audio, queue_size=10)
+
+        self.mag = None
 
         while not rospy.is_shutdown():
             self.update()
@@ -66,25 +68,46 @@ class SpectrogramImageToAudio:
     def update(self, event=None):
         if self.mag_msg is None:
             return
+
+        if self.mag is not None:
+            cv2.imshow("mag", self.mag)
+            cv2.waitKey(5)
+
         if not self.is_dirty:
             return
         self.is_dirty = False
 
-        # want to have lower frequencies on the bottom of the image which
-        mag = np.flipud(self.bridge.imgmsg_to_cv2(self.mag_msg))
+        mag = self.bridge.imgmsg_to_cv2(self.mag_msg)
 
-        # TODO(lucasw) support nonlinear scaling of frequencies in image
+        # log scaling of image in y
+        # TODO(lucasw) also rescale also?  Maybe the incoming image can be lower
+        # resolution, but the remapped one can be 2048 high or some other parameter defined height?
+        xr = np.arange(0.0, mag.shape[1], dtype=np.float32).reshape(1, -1)
+        map_x = np.repeat(xr, mag.shape[0], axis=0)
+        yr = np.arange(0.0, mag.shape[0], dtype=np.float32).reshape(-1, 1)
+        # yr = 10 ** yr
+        yr = yr / np.max(yr) * mag.shape[1] - 1
+        yr = (np.log10(yr + 1) * np.max(yr)) / np.log10(np.max(yr) + 1)
+        print yr
+        map_y = np.repeat(yr, mag.shape[1], axis=1)
+
+        self.mag = cv2.remap(mag, map_x, map_y, cv2.INTER_LINEAR)
+
+        # want to have lower frequencies on the bottom of the image,
+        # but the istft expects the opposite.
+        mag = np.flipud(self.mag)
 
         phase = None
         if self.phase_msg is not None:
             phase = np.flipud(self.bridge.imgmsg_to_cv2(self.phase_msg))
             if phase.shape != mag.shape:
-                print phase.shape, '!=', mag.shape
+                rospy.logwarn(str(phase.shape) + '!=' + str(mag.shape))
                 phase = None
 
         if phase is None:
             phase = mag * 0.0
 
+        # TODO(lucasw) where did the 4 come from?
         mag = np.exp(mag * 4) - 1.0
         zxx = mag * np.exp(1j * phase)
 
