@@ -69,10 +69,6 @@ class SpectrogramImageToAudio:
         if self.mag_msg is None:
             return
 
-        if self.mag is not None:
-            cv2.imshow("mag", self.mag)
-            cv2.waitKey(5)
-
         if not self.is_dirty:
             return
         self.is_dirty = False
@@ -82,16 +78,29 @@ class SpectrogramImageToAudio:
         # log scaling of image in y
         # TODO(lucasw) also rescale also?  Maybe the incoming image can be lower
         # resolution, but the remapped one can be 2048 high or some other parameter defined height?
-        xr = np.arange(0.0, mag.shape[1], dtype=np.float32).reshape(1, -1)
-        map_x = np.repeat(xr, mag.shape[0], axis=0)
-        yr = np.arange(0.0, mag.shape[0], dtype=np.float32).reshape(-1, 1)
+        width = mag.shape[1]
+        height = mag.shape[0]
+        xr = np.arange(0.0, width, dtype=np.float32).reshape(1, -1)
+        map_x = np.repeat(xr, height, axis=0)
+        yr = np.arange(0.0, height, dtype=np.float32).reshape(-1, 1)
         # yr = 10 ** yr
-        yr = yr / np.max(yr) * mag.shape[1] - 1
-        yr = (np.log10(yr + 1) * np.max(yr)) / np.log10(np.max(yr) + 1)
-        print yr
-        map_y = np.repeat(yr, mag.shape[1], axis=1)
+        # yr_max = np.max(yr)
+        # yr = yr / yr_max * (mag.shape[1] - 1)
+        yr_max = np.max(yr)
+        yr_min = np.min(yr)
+        rospy.loginfo(str(yr_min) + " " + str(yr_max))  # + " " + str(div))
+        if False:
+            div = np.log10(yr_max + 1)
+            yr = (np.log10(yr + 1) * yr_max) / div
+        else:
+            yr = (10 ** (yr / yr_max))
+            yr = (yr - np.min(yr)) / np.max(yr) * (yr_max - yr_min) + yr_min
+
+        rospy.loginfo(yr)
+        map_y = np.repeat(yr, width, axis=1)
 
         self.mag = cv2.remap(mag, map_x, map_y, cv2.INTER_LINEAR)
+        cv2.imwrite("test.png", self.mag * 255)
 
         # want to have lower frequencies on the bottom of the image,
         # but the istft expects the opposite.

@@ -32,9 +32,9 @@ class PubChangedImage:
         self.timer = rospy.Timer(rospy.Duration(0.05), self.update)
 
     def update(self, event):
-        if self.im is not None:
-            cv2.imshow("im", self.im)
-            cv2.waitKey(5)
+        # if self.im is not None:
+        #     cv2.imshow("im", self.im)
+        #     cv2.waitKey(5)
         if True:  # try:
             stamp = os.stat(self.filename).st_mtime
             if stamp == self.old_stamp:
