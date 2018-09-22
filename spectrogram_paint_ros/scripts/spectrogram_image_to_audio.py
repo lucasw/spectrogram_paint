@@ -83,16 +83,13 @@ class SpectrogramImageToAudio:
         xr = np.arange(0.0, width, dtype=np.float32).reshape(1, -1)
         map_x = np.repeat(xr, height, axis=0)
         yr = np.arange(0.0, height, dtype=np.float32).reshape(-1, 1)
-        # yr = 10 ** yr
-        # yr_max = np.max(yr)
-        # yr = yr / yr_max * (mag.shape[1] - 1)
-        yr_max = np.max(yr)
-        yr_min = np.min(yr)
-        rospy.loginfo(str(yr_min) + " " + str(yr_max))  # + " " + str(div))
         if False:
+            yr_max = np.max(yr)
+            yr_min = np.min(yr)
+            rospy.loginfo(str(yr_min) + " " + str(yr_max))  # + " " + str(div))
             div = np.log10(yr_max + 1)
             yr = (np.log10(yr + 1) * yr_max) / div
-        else:
+        elif False:
             yr = (10 ** (yr / yr_max))
             yr = (yr - np.min(yr)) / np.max(yr) * (yr_max - yr_min) + yr_min
 
