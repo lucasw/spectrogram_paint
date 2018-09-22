@@ -24,16 +24,23 @@ class ViewAudio():
         self.audio = None
         self.sub = rospy.Subscriber("audio", Audio,
                                     self.audio_callback, queue_size=1)
+        self.dirty = False
         self.timer = rospy.Timer(rospy.Duration(0.05), self.update)
 
     def audio_callback(self, msg):
         self.audio = msg
+        self.dirty = True
         # for i in range(len(msg.values)):
         #     self.buffer.append(msg.values[i])
 
     def update(self, event):
-        self.im[:, :, 1:3] = (self.im[:, :, 1:3] * self.fade1).astype(np.uint8)
-        self.im[:, :, 0] = (self.im[:, :, 0] * self.fade2).astype(np.uint8)
+        if not self.dirty:
+            return
+        self.dirty = False
+        if False:
+            self.im[:, :, 1:3] = (self.im[:, :, 1:3] * self.fade1).astype(np.uint8)
+            self.im[:, :, 0] = (self.im[:, :, 0] * self.fade2).astype(np.uint8)
+        self.im[:, :, :] = 0
         if self.audio is not None:
             width = self.im.shape[1]
             height = self.im.shape[0]
@@ -41,7 +48,7 @@ class ViewAudio():
             # loop through entire msg?
             last_y = 0
             # TODO(lucasw) skip parameter
-            for i in range(0, width):
+            for i in range(0, len(self.audio.data)):
                 if i >= len(self.audio.data):
                     break
                 sample = self.audio.data[i] * half_ht + half_ht
@@ -52,7 +59,10 @@ class ViewAudio():
                 y = int(sample)  # % height
                 y0 = min(last_y, y)
                 y1 = max(last_y, y)
-                self.im[y0:y1 + 1, i, :] = 255
+                im_ind = i % width
+                self.im[y0:y1 + 1, im_ind, 0] = 255
+                self.im[y0:y1 + 1, im_ind, 1] = 10 * i  / width
+                self.im[y0:y1 + 1, im_ind, 2] = 2 * i  / width
                 last_y = y
         self.pub.publish(self.bridge.cv2_to_imgmsg(self.im, "bgr8"))
 
