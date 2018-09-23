@@ -1,9 +1,15 @@
 <?xml version="1.0"?>
 <launch>
 
+<!--
   <arg name="device" default="0" />
   <arg name="cam_width" default="640" />
   <arg name="cam_height" default="480" />
+-->
+  <arg name="device" default="1" />
+  <arg name="cam_width" default="544" />
+  <arg name="cam_height" default="288" />
+
   <arg name="cam_frame_rate" default="15" />
   <arg name="pixel_format" value="yuyv" />
 
@@ -25,6 +31,17 @@
       - 'image_transport/theora'
     </rosparam>
   </group>
+
+  <node name="v4l2ucp" pkg="v4l2ucp" type="v4l2ucp"
+      output="screen" >
+    <param name="device" value="/dev/video$(arg device)" />
+  </node>
+  <!-- TODO(lucasw) Need to delay launch of this until the v4l2ucp node above
+    has complete creating all the parameters- maybe it should publish an 'update'
+    signal? -->
+  <node name="dr_topics" pkg="dynamic_reconfigure_tools" type="dr_topics.py"
+      output="screen" >
+  </node>
 
   <group>
       <node name="black" pkg="vimjay" type="color"
@@ -63,9 +80,14 @@
       <param name="z_scale" value="0.0" />
       <!-- TODO(lwalter) many of these values depend on the resolution of the input image
           from the usb camera -->
+          <!--
       <param name="psi" value="1.44" />
       <param name="center_x" value="-0.45" />
       <param name="center_y" value="3.2" />
+      -->
+      <param name="psi" value="1.34" />
+      <param name="center_x" value="-0.44" />
+      <param name="center_y" value="5.6" />
     </node>
 
     <node name="invert_image" pkg="image_manip" type="iir_image_node"
@@ -84,9 +106,9 @@
       type="spectrogram_image_to_audio.py"
       output="screen" >
     <param name="sample_rate" value="44100" />
+    <remap from="magnitude" to="inverted_image" />
   </node>
 
-  <!--
   <node name="view_audio" pkg="spectrogram_paint_ros"
       type="view_audio.py"
       output="screen" >
@@ -96,5 +118,11 @@
       type="loop_audio.py"
       output="screen" >
   </node>
-  -->
+
+  <node name="rqt_generic" pkg="rqt_gui" type="rqt_gui" 
+      args="--perspective-file $(find spectrogram_paint_ros)/config/cam.perspective" 
+      output="screen"
+      required="false" >
+  </node>
+
 </launch>
