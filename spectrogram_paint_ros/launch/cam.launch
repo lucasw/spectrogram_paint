@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="device" default="0" />
+  <arg name="cam_width" default="640" />
+  <arg name="cam_height" default="480" />
+  <arg name="cam_frame_rate" default="15" />
+  <arg name="pixel_format" value="yuyv" />
+
+  <arg name="width" default="64" />
+  <arg name="height" default="2048" />
+
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node"
+      output="screen" >
+    <param name="image_width" value="$(arg cam_width)" />
+    <param name="image_height" value="$(arg cam_height)" />
+    <param name="framerate" value="$(arg cam_frame_rate)" />
+    <param name="video_device" value="/dev/video$(arg device)" />
+    <param name="pixel_format" value="$(arg pixel_format)" />
+  </node>
+  <group ns="usb_cam/image_raw" >
+    <rosparam param="disable_pub_plugins">
+      - 'image_transport/compressed'
+      - 'image_transport/compressedDepth'
+      - 'image_transport/theora'
+    </rosparam>
+  </group>
+
+  <group>
+      <node name="black" pkg="vimjay" type="color"
+        output="screen" >
+      <!-- These values need to be width/4 and height/4 -->
+      <param name="width" value="$(arg width)" />
+      <param name="height" value="$(arg height)" />
+      <param name="red" value="255" />
+      <param name="green" value="255" />
+      <param name="blue" value="255" />
+      <remap from="image" to="white_image" />
+    </node>
+    <group ns="white_image" >
+      <rosparam param="disable_pub_plugins">
+        - 'image_transport/compressed'
+        - 'image_transport/compressedDepth'
+        - 'image_transport/theora'
+      </rosparam>
+    </group>
+
+    <node name="nodelet_manager" pkg="nodelet" type="nodelet" 
+          args="manager" output="screen" >
+    </node>
+
+    <node pkg="nodelet" type="nodelet" 
+        name="roto_zoom0"
+        args="load image_manip/RotoZoom nodelet_manager"
+        output="screen">
+      <param name="frame_rate" value="10.0"/>
+      <remap from="image_in" to="/usb_cam/image_raw"/>
+      <remap from="background_image" to="/white_image"/>
+      <remap from="image_out" to="rotated"/>
+
+      <param name="phi" value="1.570796" />
+      <param name="z" value="1.0" />
+      <param name="z_scale" value="0.0" />
+      <!-- TODO(lwalter) many of these values depend on the resolution of the input image
+          from the usb camera -->
+      <param name="psi" value="1.44" />
+      <param name="center_x" value="-0.45" />
+      <param name="center_y" value="3.2" />
+    </node>
+
+    <node name="invert_image" pkg="image_manip" type="iir_image_node"
+        output="screen" >
+      <param name="use_time_sequence" value="false" />
+      <param name="frame_rate" value="10.0" />
+      <rosparam param="b_coeffs">[1.0, -1.0]</rosparam>
+      <remap from="image_0" to="/white_image" />
+      <remap from="image_1" to="/rotated" />
+      <remap from="image_out" to="inverted_image" />
+    </node>
+
+  </group>
+
+  <node name="spectrogram_image_to_audio" pkg="spectrogram_paint_ros"
+      type="spectrogram_image_to_audio.py"
+      output="screen" >
+    <param name="sample_rate" value="44100" />
+  </node>
+
+  <!--
+  <node name="view_audio" pkg="spectrogram_paint_ros"
+      type="view_audio.py"
+      output="screen" >
+  </node>
+
+  <node name="loop_audio" pkg="spectrogram_paint_ros"
+      type="loop_audio.py"
+      output="screen" >
+  </node>
+  -->
+</launch>
