@@ -73,7 +73,15 @@ class SpectrogramImageToAudio:
             return
         self.is_dirty = False
 
+        rospy.loginfo("update")
+
         mag = self.bridge.imgmsg_to_cv2(self.mag_msg)
+        print "input type", mag.shape, mag.dtype
+        if mag.dtype == np.uint8:
+            mag = mag / 255.0
+        if len(mag.shape) > 2:
+            # TODO(lucasw) convert to grayscale properly
+            mag = mag[:, :, 0]
 
         # log scaling of image in y
         # TODO(lucasw) also rescale also?  Maybe the incoming image can be lower
@@ -155,10 +163,14 @@ class SpectrogramImageToAudio:
         x_max = np.max(np.abs(x))
         if x_max != 0.0:
             x = x / x_max
+        print x.shape, x.dtype
         msg = Audio()
         msg.data = x.tolist()
         msg.sample_rate = self.fs
         self.pub.publish(msg)
+        # TODO(lucasw) need to be notified by loop audio when it loops
+        # so can only update a little before then
+        rospy.sleep(len(msg.data) / float(self.fs) * 0.4)
 
 if __name__ == '__main__':
     rospy.init_node('spectrogram_image_to_audio')
