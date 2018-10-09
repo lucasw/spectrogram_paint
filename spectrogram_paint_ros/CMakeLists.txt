@@ -35,7 +35,7 @@ generate_messages(
 
 catkin_package(
   # INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
+  # LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS nodelet roscpp sensor_msgs std_msgs
 )
 
@@ -50,9 +50,9 @@ include_directories(
 # add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencpp)
 
 # TODO(lucasw) is this needed?
-if(catkin_EXPORTED_LIBRARIES)
-  add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_LIBRARIES})
-endif()
+# if(catkin_EXPORTED_LIBRARIES)
+#   add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_LIBRARIES})
+# endif()
 
 # install(TARGETS ${PROJECT_NAME}
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
