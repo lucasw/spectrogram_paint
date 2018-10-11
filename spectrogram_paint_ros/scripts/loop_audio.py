@@ -26,6 +26,7 @@ class LoopAudio:
             # TODO(lucasw) mutexes, dual buffers
             # This needs to run in separate thread because it is blocking the audio callback,
             # for now sleep
+            print self.audio.shape
             scikits.audiolab.play(self.audio, fs=self.audio_msg.sample_rate)
             rospy.sleep(0.05)
 
@@ -33,6 +34,11 @@ class LoopAudio:
         rospy.loginfo("new audio")
         self.audio_msg = msg
         self.audio = np.array(msg.data)
+        # this will throw if the length isn't even
+        if self.audio_msg.stereo:
+            # TODO(lucasw) need locks to avoid problems with play() above
+            self.audio = np.append(self.audio, msg.data_right)
+            self.audio = self.audio.reshape((2, -1))
 
 if __name__ == '__main__':
     rospy.init_node('loop_audio')
