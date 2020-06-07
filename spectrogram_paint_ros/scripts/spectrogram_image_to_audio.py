@@ -172,6 +172,7 @@ class SpectrogramImageToAudio:
         # so can only update a little before then
         rospy.sleep(len(msg.data) / float(self.fs) * 0.4)
 
+
 if __name__ == '__main__':
     rospy.init_node('spectrogram_image_to_audio')
     spectrogram_image_to_audio = SpectrogramImageToAudio()

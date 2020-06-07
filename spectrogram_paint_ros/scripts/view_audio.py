@@ -61,10 +61,11 @@ class ViewAudio():
                 y1 = max(last_y, y)
                 im_ind = i % width
                 self.im[y0:y1 + 1, im_ind, 0] = 255
-                self.im[y0:y1 + 1, im_ind, 1] = 10 * i  / width
-                self.im[y0:y1 + 1, im_ind, 2] = 2 * i  / width
+                self.im[y0:y1 + 1, im_ind, 1] = 10 * i / width
+                self.im[y0:y1 + 1, im_ind, 2] = 2 * i / width
                 last_y = y
         self.pub.publish(self.bridge.cv2_to_imgmsg(self.im, "bgr8"))
+
 
 if __name__ == '__main__':
     rospy.init_node('view_audio')

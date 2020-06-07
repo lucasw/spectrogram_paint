@@ -19,7 +19,7 @@ class PubChangedImage:
     def __init__(self):
         self.pub = rospy.Publisher("image", Image, queue_size=3)
         rospy.sleep(1.0)
-        self.filename = rospy.get_param("~image","image.tif")
+        self.filename = rospy.get_param("~image", "image.tif")
         rospy.loginfo(self.filename)
 
         # temp
@@ -62,6 +62,7 @@ class PubChangedImage:
             rospy.logerr("something went wrong " + str(ex))
             # TODO(lucasw) catch the exception here and print something
             rospy.sleep(0.1)
+
 
 if __name__ == '__main__':
     rospy.init_node('pub_changed_image')

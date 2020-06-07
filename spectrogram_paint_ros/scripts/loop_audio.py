@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf-8
+# coding=utf-8
 
 import numpy as np
 import os
@@ -50,6 +50,7 @@ class LoopAudio:
         self.audio = audio
         self.audio_msg = msg
         self.mutex.release()
+
 
 if __name__ == '__main__':
     rospy.init_node('loop_audio')

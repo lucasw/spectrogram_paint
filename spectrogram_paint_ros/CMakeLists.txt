@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(spectrogram_paint_ros)
+cmake_minimum_required(VERSION 3.0)
+project(spectrogram_paint_ros VERSION 0.0.1)
 
 find_package(catkin REQUIRED COMPONENTS
   # dynamic_reconfigure
@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # roslint_cpp()
+roslint_python()
 
 # generate_dynamic_reconfigure_options(
 #   cfg/Delay.cfg
